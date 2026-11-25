@@ -24,8 +24,8 @@ export default function AdminLoginPage() {
   }
 
   const fillDemo = () => {
-    setEmail("admin@ondeeucomeco.com")
-    setPassword("admin2024")
+    setEmail("iasmim17santoss@gmail.com")
+    setPassword("Iasmim3737")
   }
 
   return (
@@ -48,7 +48,7 @@ export default function AdminLoginPage() {
           <div className="mb-5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
             <div className="flex items-center justify-between">
               <div className="text-amber-300 text-xs">
-                <b>Demo:</b> admin@ondeeucomeco.com / admin2024
+                <b>Demo:</b> iasmim17santoss@gmail.com / Iasmim3737
               </div>
               <button onClick={fillDemo} className="text-xs px-2.5 py-1 rounded-lg bg-amber-500 text-navy-900 font-bold hover:bg-amber-400 transition-colors">
                 Preencher
@@ -63,7 +63,7 @@ export default function AdminLoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@ondeeucomeco.com"
+                placeholder="iasmim17santoss@gmail.com"
                 required
                 className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
               />

@@ -93,7 +93,7 @@ BEGIN
    ARRAY['Renda familiar até 3 salários mínimos', 'Ensino médio completo', 'Ter feito o ENEM nos últimos 2 anos', 'Residir no RJ'],
    ARRAY['dedicacao', 'organizacao'],
    ARRAY['estudar', 'naosei'],
-   '2026-10-15', 50, 'ativo', true, NULL),
+   '2027-10-15', 50, 'ativo', true, NULL),
 
   ('aaaaaaaa-aaaa-aaaa-aaaa-000000000002',
    org_instituto,
@@ -103,7 +103,7 @@ BEGIN
    ARRAY['Idade entre 18 e 29 anos', 'Ensino médio completo', 'Disponibilidade integral por 6 meses', 'Residir em Niterói ou região metropolitana'],
    ARRAY['comunicacao', 'organizacao', 'vendas'],
    ARRAY['trabalho', 'estudar', 'oportunidades'],
-   '2026-09-30', 30, 'ativo', true, 'Estágio: R$ 900/mês'),
+   '2027-09-30', 30, 'ativo', true, 'Estágio: R$ 900/mês'),
 
   -- EMPREGOS
   ('aaaaaaaa-aaaa-aaaa-aaaa-000000000003',
@@ -114,7 +114,7 @@ BEGIN
    ARRAY['Conhecimento básico de React ou similar', 'HTML/CSS intermediário', 'Vontade de aprender', 'Disponibilidade de 40h semanais'],
    ARRAY['programacao', 'informatica', 'logica'],
    ARRAY['trabalho', 'tecnologia', 'carreira'],
-   '2026-09-05', 3, 'ativo', false, 'R$ 2.500 – R$ 4.000'),
+   '2027-09-05', 3, 'ativo', false, 'R$ 2.500 – R$ 4.000'),
 
   ('aaaaaaaa-aaaa-aaaa-aaaa-000000000004',
    org_conecta,
@@ -124,7 +124,7 @@ BEGIN
    ARRAY['Ensino médio completo', 'Conhecimento básico de informática', 'Boa comunicação', 'Organização'],
    ARRAY['comunicacao', 'organizacao', 'informatica'],
    ARRAY['trabalho', 'oportunidades'],
-   '2026-08-29', 2, 'ativo', false, 'R$ 1.400 + benefícios'),
+   '2027-08-29', 2, 'ativo', false, 'R$ 1.400 + benefícios'),
 
   ('aaaaaaaa-aaaa-aaaa-aaaa-000000000005',
    org_horizonte_dig,
@@ -134,7 +134,7 @@ BEGIN
    ARRAY['Noções de redes sociais', 'Criatividade', 'Boa escrita', 'Smartphone ou computador com acesso à internet'],
    ARRAY['comunicacao', 'design', 'criatividade'],
    ARRAY['trabalho', 'negocio', 'tecnologia'],
-   '2026-09-12', 5, 'ativo', false, 'R$ 800 – R$ 2.000/mês (freelancer)'),
+   '2027-09-12', 5, 'ativo', false, 'R$ 800 – R$ 2.000/mês (freelancer)'),
 
   ('aaaaaaaa-aaaa-aaaa-aaaa-000000000006',
    org_impacto,
@@ -144,7 +144,7 @@ BEGIN
    ARRAY['Ensino fundamental completo', 'Disponibilidade de segunda a sexta', 'Proatividade', 'Boa forma física'],
    ARRAY['organizacao', 'proatividade'],
    ARRAY['trabalho', 'oportunidades'],
-   '2026-08-21', 8, 'ativo', false, 'R$ 1.320 + VT + VR'),
+   '2027-08-21', 8, 'ativo', false, 'R$ 1.320 + VT + VR'),
 
   -- CURSOS
   ('aaaaaaaa-aaaa-aaaa-aaaa-000000000007',
@@ -155,7 +155,7 @@ BEGIN
    ARRAY['Computador com acesso à internet', 'Nenhum conhecimento prévio necessário'],
    ARRAY['logica', 'informatica'],
    ARRAY['tecnologia', 'estudar', 'carreira'],
-   '2026-09-16', 100, 'ativo', true, NULL),
+   '2027-09-16', 100, 'ativo', true, NULL),
 
   ('aaaaaaaa-aaaa-aaaa-aaaa-000000000008',
    org_centroprofis,
@@ -165,7 +165,7 @@ BEGIN
    ARRAY['Ensino médio cursando ou completo', 'Disponibilidade noturna (19h–22h)', 'Interesse em trabalhar na área administrativa'],
    ARRAY['informatica', 'organizacao'],
    ARRAY['trabalho', 'estudar', 'oportunidades'],
-   '2026-08-28', 25, 'ativo', true, NULL),
+   '2027-08-28', 25, 'ativo', true, NULL),
 
   ('aaaaaaaa-aaaa-aaaa-aaaa-000000000009',
    org_escoladigital,
@@ -175,7 +175,7 @@ BEGIN
    ARRAY['Computador ou tablet', 'Acesso à internet', 'Interesse em design e criatividade'],
    ARRAY['criatividade', 'design', 'informatica'],
    ARRAY['tecnologia', 'trabalho', 'carreira'],
-   '2026-10-31', 200, 'ativo', true, NULL),
+   '2027-10-31', 200, 'ativo', true, NULL),
 
   ('aaaaaaaa-aaaa-aaaa-aaaa-000000000010',
    org_evolua,
@@ -185,7 +185,7 @@ BEGIN
    ARRAY['Conhecimento básico de lógica de programação', 'Computador com 8GB RAM', 'Disponibilidade de 20h/semana'],
    ARRAY['programacao', 'logica', 'matematica'],
    ARRAY['tecnologia', 'trabalho', 'carreira'],
-   '2026-09-26', 40, 'ativo', false, 'R$ 1.200 (com bolsas disponíveis)'),
+   '2027-09-26', 40, 'ativo', false, 'R$ 1.200 (com bolsas disponíveis)'),
 
   -- PROGRAMAS
   ('aaaaaaaa-aaaa-aaaa-aaaa-000000000011',
@@ -196,7 +196,7 @@ BEGIN
    ARRAY['Idade entre 16 e 24 anos', 'Estar fora do mercado de trabalho formal', 'Ensino médio cursando ou completo'],
    ARRAY['comunicacao', 'organizacao'],
    ARRAY['trabalho', 'oportunidades', 'naosei'],
-   '2026-10-17', 60, 'ativo', true, NULL),
+   '2027-10-17', 60, 'ativo', true, NULL),
 
   ('aaaaaaaa-aaaa-aaaa-aaaa-000000000012',
    org_instituto,
@@ -206,7 +206,7 @@ BEGIN
    ARRAY['Maior de 18 anos', 'Ideia de negócio ou negócio já iniciado', 'Disponibilidade para 2 encontros semanais'],
    ARRAY['comunicacao', 'organizacao', 'vendas'],
    ARRAY['negocio', 'oportunidades'],
-   '2026-11-14', 20, 'ativo', true, NULL),
+   '2027-11-14', 20, 'ativo', true, NULL),
 
   ('aaaaaaaa-aaaa-aaaa-aaaa-000000000013',
    org_faculdade,
@@ -216,7 +216,7 @@ BEGIN
    ARRAY['Ter realizado o ENEM com nota acima de 450', 'Renda familiar per capita até 1,5 salário mínimo (bolsa integral)', 'Não ter diploma de ensino superior'],
    ARRAY['dedicacao'],
    ARRAY['estudar', 'carreira', 'naosei'],
-   '2026-11-28', 80, 'ativo', true, NULL),
+   '2027-11-28', 80, 'ativo', true, NULL),
 
   -- VOLUNTARIADO
   ('aaaaaaaa-aaaa-aaaa-aaaa-000000000014',
@@ -227,7 +227,7 @@ BEGIN
    ARRAY['Ensino médio completo', 'Disponibilidade semanal de 2h', 'Interesse em educação'],
    ARRAY['comunicacao', 'ensino', 'paciencia'],
    ARRAY['oportunidades', 'naosei'],
-   '2026-12-18', 15, 'ativo', true, NULL)
+   '2027-12-18', 15, 'ativo', true, NULL)
 
   ON CONFLICT (id) DO NOTHING;
 

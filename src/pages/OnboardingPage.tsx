@@ -45,6 +45,11 @@ const SKILLS = [
   { icon: "📁", label: "Organização", value: "organizacao" },
   { icon: "📈", label: "Excel / Planilhas", value: "excel" },
   { icon: "👥", label: "Liderança", value: "liderança" },
+  { icon: "🧪", label: "Química", value: "quimica" },
+  { icon: "🔬", label: "Laboratório", value: "laboratorio" },
+  { icon: "🧬", label: "Ciências", value: "ciencias" },
+  { icon: "📦", label: "Logística / Estoque", value: "logistica" },
+  { icon: "🧠", label: "Raciocínio lógico", value: "logica" },
 ]
 
 const AVAILABILITIES = [

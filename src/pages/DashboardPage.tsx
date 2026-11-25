@@ -12,27 +12,20 @@ import type { Opportunity, Application } from "@/types/database"
 const TABS = ["Visão geral", "Recomendações", "Salvas", "Inscrições"]
 
 const STATUS_COLORS: Record<string, string> = {
-  interesse: "bg-slate-100 text-slate-600",
+  interesse: "bg-blue-100 text-blue-800",
   inscrito: "bg-blue-100 text-blue-700",
   em_analise: "bg-amber-100 text-amber-700",
   aprovado: "bg-emerald-100 text-emerald-700",
   recusado: "bg-red-100 text-red-600",
 }
 const STATUS_LABELS: Record<string, string> = {
-  interesse: "Interesse",
+  interesse: "Interesse registrado",
   inscrito: "Inscrito",
   em_analise: "Em análise",
   aprovado: "Aprovado",
   recusado: "Recusado",
 }
 
-const PATH_STEPS = [
-  { n: 1, label: "Identificar a oportunidade certa", status: "done" },
-  { n: 2, label: "Fazer o onboarding do perfil", status: "done" },
-  { n: 3, label: "Ver recomendações personalizadas", status: "current" },
-  { n: 4, label: "Fazer a inscrição em oportunidades", status: "pending" },
-  { n: 5, label: "Acompanhar o progresso", status: "pending" },
-]
 
 function ScoreChip({ score }: { score: number }) {
   const color = getScoreColor(score)
@@ -67,7 +60,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!user) return
-    Promise.all([
+    const refresh = () => Promise.all([
       getOpportunities(),
       getUserApplications(user.id),
       getSavedOpportunities(user.id),
@@ -77,11 +70,25 @@ export default function DashboardPage() {
       setSavedOpps(savedRes.data as { opportunities?: Opportunity }[])
       setLoading(false)
     })
+    refresh()
+    window.addEventListener("oec:applications-changed", refresh)
+    window.addEventListener("focus", refresh)
+    return () => { window.removeEventListener("oec:applications-changed", refresh); window.removeEventListener("focus", refresh) }
   }, [user?.id])
 
   const recommendations = profile && opportunities.length > 0
-    ? getRecommendations(profile, opportunities, 6)
+    ? getRecommendations(profile, opportunities, opportunities.length)
     : []
+
+  const hasApplications = applications.length > 0
+  const hasStatusUpdates = applications.some(app => ["em_analise", "aprovado", "recusado"].includes(app.status))
+  const pathSteps = [
+    { n: 1, label: "Identificar a oportunidade certa", status: profile ? "done" : "current" },
+    { n: 2, label: "Fazer o onboarding do perfil", status: profile ? "done" : "pending" },
+    { n: 3, label: "Receber recomendações personalizadas", status: recommendations.length > 0 ? "done" : "pending" },
+    { n: 4, label: "Demonstrar interesse em uma oportunidade", status: hasApplications ? "done" : "pending" },
+    { n: 5, label: "Acompanhar o andamento da candidatura", status: hasStatusUpdates ? "done" : hasApplications ? "current" : "pending" },
+  ]
 
   const firstName = user?.name?.split(" ")[0] || "Usuário"
   const avgScore = recommendations.length
@@ -233,7 +240,7 @@ export default function DashboardPage() {
                 <div className="bg-navy-900 rounded-2xl p-6">
                   <div className="text-amber-400 text-xs font-bold uppercase tracking-widest mb-3">Seu caminho</div>
                   <div className="space-y-2">
-                    {PATH_STEPS.map((s) => (
+                    {pathSteps.map((s) => (
                       <div key={s.n} className={`flex items-center gap-3 rounded-xl px-4 py-2.5 ${
                         s.status === "current" ? "bg-amber-500/15 border border-amber-500/30" :
                         s.status === "done" ? "bg-emerald-500/10 border border-emerald-500/20" :
@@ -252,6 +259,7 @@ export default function DashboardPage() {
                       </div>
                     ))}
                   </div>
+                  {hasApplications && <button onClick={() => setActiveTab(3)} className="mt-4 w-full rounded-xl bg-white text-[#102b4c] py-2.5 text-sm font-semibold hover:bg-blue-50">Acompanhar minhas {applications.length} candidatura(s) →</button>}
                 </div>
 
                 {!profile && (
@@ -324,7 +332,8 @@ export default function DashboardPage() {
             {/* ── Tab 3: Inscrições ── */}
             {activeTab === 3 && (
               <div>
-                <h2 className="text-xl font-display font-semibold text-slate-900 mb-5">Minhas inscrições</h2>
+                <h2 className="text-xl font-display font-semibold text-slate-900 mb-2">Minhas inscrições</h2>
+                <p className="text-sm text-slate-500 mb-5">Veja o andamento do seu interesse. A inscrição formal pode exigir etapas adicionais na organização responsável.</p>
                 {loading ? (
                   <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-20 rounded-2xl shimmer" />)}</div>
                 ) : applications.length === 0 ? (
@@ -345,6 +354,7 @@ export default function DashboardPage() {
                       >
                         <div className="flex-1 min-w-0">
                           <div className="font-semibold text-slate-900 text-sm truncate">{app.opportunities?.title ?? "Oportunidade"}</div>
+                          <p className="text-xs text-slate-500 mt-1">{app.status === "interesse" ? "Interesse registrado · aguardando próximos passos" : app.status === "em_analise" ? "Candidatura em análise" : app.status === "aprovado" ? "Aprovado! Confira os próximos passos com a organização" : app.status === "recusado" ? "Processo encerrado para esta candidatura" : "Acompanhe as atualizações desta oportunidade"}</p>
                           <div className="text-slate-400 text-xs mt-0.5 flex items-center gap-1.5">
                             <Clock size={10} />
                             {new Date(app.created_at).toLocaleDateString("pt-BR")}

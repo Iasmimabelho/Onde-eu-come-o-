@@ -1,3 +1,4 @@
+import { parseOpportunityDate, isOpportunityExpired } from "@/lib/opportunityDates"
 import { useState } from "react"
 import { MapPin, Clock, Bookmark, BookmarkCheck, Users, ArrowRight } from "lucide-react"
 import type { Opportunity } from "@/types/database"
@@ -42,6 +43,7 @@ export default function OpportunityCard({
   const [applied, setApplied] = useState(isAppliedInitial)
   const [savingLoading, setSavingLoading] = useState(false)
   const [applyLoading, setApplyLoading] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [applyError, setApplyError] = useState<string | null>(null)
 
   async function handleSave(e: React.MouseEvent) {
@@ -65,17 +67,17 @@ export default function OpportunityCard({
     setApplyError(null)
     const { error } = await applyToOpportunity(user.id, opp.id)
     if (error) setApplyError(error.message)
-    else setApplied(true)
+    else { setApplied(true); setShowSuccess(true); window.dispatchEvent(new Event("oec:applications-changed")) }
     setApplyLoading(false)
   }
 
   const org = opp.organizations
-  const deadline = opp.deadline ? new Date(opp.deadline) : null
-  const isExpired = deadline ? deadline < new Date() : false
+  const deadline = parseOpportunityDate(opp.deadline)
+  const isExpired = isOpportunityExpired(opp.deadline)
 
   return (
     <div
-      className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group overflow-hidden card-lift"
+      className="oec-opportunity-card bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group overflow-hidden card-lift"
       onClick={() => onOpen ? onOpen(opp) : navigate(`/oportunidades`)}
     >
       {/* Header */}
@@ -123,7 +125,7 @@ export default function OpportunityCard({
       {matchReasons && matchReasons.length > 0 && (
         <div className="px-5 pb-3 flex flex-wrap gap-1.5">
           {matchReasons.slice(0, 2).map((r) => (
-            <span key={r} className="text-[11px] bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full">✓ {r}</span>
+            <span key={r} className="oec-reason text-[11px] bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full">✓ {r}</span>
           ))}
         </div>
       )}
@@ -171,6 +173,16 @@ export default function OpportunityCard({
         </div>
       </div>
 
+      {showSuccess && (
+        <div className="mx-4 mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-slate-800" onClick={e => e.stopPropagation()}>
+          <div className="font-bold text-sm text-[#102b4c]">✓ Interesse registrado com sucesso!</div>
+          <p className="text-xs mt-1 text-slate-600">Acompanhe sua candidatura, confira os requisitos e aguarde as próximas atualizações. O registro de interesse não garante a inscrição formal na organização.</p>
+          <div className="flex gap-2 mt-3">
+            <button onClick={() => navigate("/dashboard")} className="rounded-lg bg-[#102b4c] px-3 py-2 text-white text-xs font-semibold">Minhas inscrições →</button>
+            <button onClick={() => setShowSuccess(false)} className="rounded-lg border border-blue-200 px-3 py-2 text-xs">Fechar</button>
+          </div>
+        </div>
+      )}
       {applyError && (
         <div className="px-5 pb-3 text-xs text-red-500">{applyError}</div>
       )}

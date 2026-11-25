@@ -1,3 +1,4 @@
+import { parseOpportunityDate } from "@/lib/opportunityDates"
 import { useState, useEffect } from "react"
 import { X, MapPin, Clock, Users, Building2, CheckCircle2, ArrowRight, Bookmark, BookmarkCheck, ExternalLink } from "lucide-react"
 import type { Opportunity } from "@/types/database"
@@ -40,7 +41,7 @@ export default function OpportunityModal({ opportunity: opp, onClose }: Opportun
   if (!opp) return null
 
   const org = opp.organizations
-  const deadline = opp.deadline ? new Date(opp.deadline) : null
+  const deadline = parseOpportunityDate(opp.deadline)
 
   async function handleApply() {
     if (!user) { navigate("/login"); return }
@@ -48,7 +49,7 @@ export default function OpportunityModal({ opportunity: opp, onClose }: Opportun
     setError(null)
     const { error: err } = await applyToOpportunity(user.id, opp!.id)
     if (err) setError(err.message)
-    else { setApplied(true); setApplySuccess(true) }
+    else { setApplied(true); setApplySuccess(true); window.dispatchEvent(new Event("oec:applications-changed")) }
     setApplyLoading(false)
   }
 
@@ -166,7 +167,7 @@ export default function OpportunityModal({ opportunity: opp, onClose }: Opportun
             <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 mb-4 flex items-center gap-2">
               <CheckCircle2 size={16} className="text-emerald-600" />
               <p className="text-sm text-emerald-700 font-medium">
-                Interesse registrado! Você pode acompanhar pelo dashboard.
+                Interesse registrado! Consulte os requisitos da oportunidade e acompanhe as atualizações no painel. Isso não garante uma inscrição formal na organização.
               </p>
             </div>
           )}
@@ -185,7 +186,7 @@ export default function OpportunityModal({ opportunity: opp, onClose }: Opportun
             {applied ? (
               <div className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 text-emerald-700 font-semibold text-sm">
                 <CheckCircle2 size={16} />
-                Inscrito
+                Interesse registrado
               </div>
             ) : (
               <button
@@ -201,6 +202,7 @@ export default function OpportunityModal({ opportunity: opp, onClose }: Opportun
               </button>
             )}
           </div>
+          {applied && <button onClick={() => { onClose(); navigate("/dashboard") }} className="mt-3 w-full rounded-xl bg-[#102b4c] py-3 text-white text-sm font-semibold hover:bg-[#173b63]">Acompanhar em Minhas inscrições →</button>}
         </div>
       </div>
     </div>

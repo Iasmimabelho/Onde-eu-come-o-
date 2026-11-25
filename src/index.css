@@ -589,3 +589,15 @@ html.dark .oec-popup { color:#f4f8fc; }
 html.dark .oec-popup span, html.dark .oec-popup-kicker { color:#a9bacb; }
 @media (max-width:700px){ .professional-map{height:470px}.map-data-note{right:12px;max-width:none} }
 
+
+/* Onde Eu Começo — cartões de oportunidades: identidade navy e branco */
+.oec-opportunity-card { background:#fff; border:1px solid #d7e4f1; border-radius:20px; box-shadow:0 12px 30px -23px #071b33; transition:transform .2s,box-shadow .2s,border-color .2s; }
+.oec-opportunity-card:hover { transform:translateY(-3px); border-color:#8ab1d5; box-shadow:0 20px 40px -24px #071b33; }
+.oec-opportunity-card .oec-reason { background:#eaf3fc; color:#173b63; border:1px solid #d5e6f7; font-weight:600; }
+html.dark .oec-opportunity-card { background:#102a45 !important; border-color:#2b5276 !important; box-shadow:0 14px 35px -24px #000; }
+html.dark .oec-opportunity-card .oec-reason { background:#1a3c5e !important; color:#e7f3ff !important; border-color:#3b6388 !important; }
+html.dark .oec-opportunity-card .text-slate-900,html.dark .oec-opportunity-card .text-slate-800 { color:#fff !important; }
+html.dark .oec-opportunity-card .text-slate-400,html.dark .oec-opportunity-card .text-slate-500 { color:#b7cce0 !important; }
+html.dark .oec-opportunity-card .text-brand-600,html.dark .oec-opportunity-card .text-brand-700 { color:#b8dcff !important; }
+html.dark .oec-opportunity-card .bg-slate-100 { background:#254666 !important; color:#eaf5ff !important; }
+html.dark .oec-opportunity-card .border-slate-50 { border-color:#315271 !important; }

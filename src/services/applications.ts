@@ -4,10 +4,9 @@ import type { Application, ApplicationStatus } from "@/types/database"
 export async function applyToOpportunity(userId: string, opportunityId: string) {
   const { data, error } = await supabase
     .from("applications")
-    .upsert({ user_id: userId, opportunity_id: opportunityId, status: "interesse" })
+    .upsert({ user_id: userId, opportunity_id: opportunityId, status: "interesse" }, { onConflict: "user_id,opportunity_id", ignoreDuplicates: true })
     .select()
-    .single()
-  return { data, error }
+  return { data: data?.[0] ?? null, error }
 }
 
 export async function getUserApplications(userId: string) {

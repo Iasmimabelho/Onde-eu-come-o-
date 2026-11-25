@@ -1,3 +1,4 @@
+import { parseOpportunityDate } from "@/lib/opportunityDates"
 import { useMemo, useState, useEffect } from "react"
 import { MapPin, Search, X, Clock, Bookmark, BookmarkCheck, ExternalLink } from "lucide-react"
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet"
@@ -22,13 +23,7 @@ const CATEGORY_CONFIG: Record<OppCategory | "all", { label: string; color: strin
 }
 
 const REGIONS = [
-  { name: "Niterói", center: [-22.8832, -43.1034] as [number, number], zoom: 12 },
-  { name: "São Gonçalo", center: [-22.8268, -43.0634] as [number, number], zoom: 12 },
-  { name: "Niterói + São Gonçalo", center: [-22.855, -43.083] as [number, number], zoom: 11 },
-  { name: "Rio de Janeiro", center: [-22.9068, -43.1729] as [number, number], zoom: 11 },
-  { name: "Baixada Fluminense", center: [-22.7592, -43.4511] as [number, number], zoom: 10 },
-  { name: "Região Serrana", center: [-22.5050, -43.1786] as [number, number], zoom: 10 },
-  { name: "Sul Fluminense", center: [-22.5231, -44.1042] as [number, number], zoom: 10 },
+  { name: "Rio de Janeiro (estado)", center: [-22.83, -43.27] as [number, number], zoom: 10 },
 ]
 
 const OPPORTUNITY_COORDS: Record<string, [number, number]> = {
@@ -44,21 +39,49 @@ const OPPORTUNITY_COORDS: Record<string, [number, number]> = {
 }
 
 const LOCATION_CENTERS: Array<{ test: RegExp; coords: [number, number] }> = [
-  { test: /barra da tijuca/i, coords: [-22.99835, -43.36545] },
+  { test: /copacabana/i, coords: [-22.9711, -43.1822] },
+  { test: /flamengo/i, coords: [-22.9345, -43.1749] },
+  { test: /catete/i, coords: [-22.9250, -43.1793] },
+  { test: /lapa/i, coords: [-22.9130, -43.1805] },
+  { test: /madureira/i, coords: [-22.8735, -43.3390] },
+  { test: /meier|m[eé]ier/i, coords: [-22.9029, -43.2808] },
+  { test: /campo grande/i, coords: [-22.9032, -43.5595] },
+  { test: /bangu/i, coords: [-22.8742, -43.4653] },
+  { test: /charitas/i, coords: [-22.9310, -43.0952] },
+  { test: /s[aã]o francisco/i, coords: [-22.9172, -43.0941] },
+  { test: /pendotiba/i, coords: [-22.9144, -43.0588] },
+  { test: /barreto/i, coords: [-22.8651, -43.1057] },
+  { test: /maracan[aã]/i, coords: [-22.9114, -43.2366] },
+  { test: /botafogo/i, coords: [-22.9519, -43.1863] },
+  { test: /tijuca/i, coords: [-22.9249, -43.2327] },
+  { test: /barra da tijuca/i, coords: [-23.0003, -43.3659] },
+  { test: /centro.*rio de janeiro/i, coords: [-22.9068, -43.1729] },
   { test: /petr[oó]polis/i, coords: [-22.5050, -43.1786] },
   { test: /nova igua[cç]u/i, coords: [-22.7592, -43.4511] },
   { test: /volta redonda/i, coords: [-22.52306, -44.10417] },
-  { test: /s[aã]o gon[cç]alo|coluband[eê]/i, coords: [-22.8686, -42.9828] },
-  { test: /niter[oó]i|icara[ií]|engenhoca/i, coords: [-22.8833, -43.1036] },
+  { test: /alc[aâ]ntara/i, coords: [-22.8222, -43.0468] },
+  { test: /neves/i, coords: [-22.8645, -43.0921] },
+  { test: /trindade/i, coords: [-22.8377, -43.0540] },
+  { test: /coluband[eê]/i, coords: [-22.8686, -42.9828] },
+  { test: /centro.*s[aã]o gon[cç]alo/i, coords: [-22.8268, -43.0634] },
+  { test: /s[aã]o gon[cç]alo/i, coords: [-22.8268, -43.0634] },
+  { test: /icara[ií]/i, coords: [-22.9035, -43.1108] },
+  { test: /santa rosa/i, coords: [-22.8956, -43.0939] },
+  { test: /fonseca/i, coords: [-22.8747, -43.0902] },
+  // Ponto de referência no interior do Ingá, evitando o trecho da Baía de Guanabara.
+  { test: /ing[aá]/i, coords: [-22.9009, -43.1168] },
+  { test: /itaipu/i, coords: [-22.9500, -43.0304] },
+  { test: /piratininga/i, coords: [-22.9530, -43.0720] },
+  { test: /engenhoca/i, coords: [-22.8708, -43.0992] },
+  { test: /centro.*niter[oó]i/i, coords: [-22.8833, -43.1036] },
+  { test: /niter[oó]i/i, coords: [-22.8833, -43.1036] },
   { test: /rio de janeiro/i, coords: [-22.9068, -43.1729] },
 ]
 
 function getOpportunityCoords(opp: Opportunity): [number, number] | null {
   if (opp.modality === "remoto") return null
-  const exact = OPPORTUNITY_COORDS[opp.id]
-  if (exact) return exact
   const location = opp.location ?? opp.organizations?.location ?? ""
-  return LOCATION_CENTERS.find(({ test }) => test.test(location))?.coords ?? null
+  return LOCATION_CENTERS.find(({ test }) => test.test(location))?.coords ?? OPPORTUNITY_COORDS[opp.id] ?? null
 }
 
 function markerIcon(color: string, active: boolean) {
@@ -71,17 +94,17 @@ function markerIcon(color: string, active: boolean) {
   })
 }
 
-function MapFocus({ opportunity, region }: { opportunity: Opportunity | null; region: string }) {
+function MapFocus({ opportunity, region, positions }: { opportunity: Opportunity | null; region: string; positions: Map<string, [number, number]> }) {
   const map = useMap()
   useEffect(() => {
     if (opportunity) {
-      const coords = getOpportunityCoords(opportunity)
-      if (coords) map.flyTo(coords, 14, { duration: 0.7 })
+      const coords = positions.get(opportunity.id) ?? getOpportunityCoords(opportunity)
+      if (coords) map.flyTo(coords, 15, { duration: 0.7 })
       return
     }
-    const target = REGIONS.find(r => r.name === region) ?? REGIONS[2]
+    const target = REGIONS.find(r => r.name === region) ?? REGIONS[0]
     map.flyTo(target.center, target.zoom, { duration: 0.6 })
-  }, [map, opportunity, region])
+  }, [map, opportunity, region, positions])
   return null
 }
 
@@ -107,7 +130,7 @@ function ListItem({ opp, score, userId, active, onSelect }: ListItemProps) {
     else { await saveOpportunity(userId, opp.id); setSaved(true) }
   }
 
-  const deadline = opp.deadline ? new Date(opp.deadline) : null
+  const deadline = parseOpportunityDate(opp.deadline)
   const hasMapLocation = !!getOpportunityCoords(opp)
 
   return (
@@ -135,7 +158,7 @@ function ListItem({ opp, score, userId, active, onSelect }: ListItemProps) {
 export default function MapPage() {
   const { user, profile, navigate } = useAuth()
   const [activeCategory, setActiveCategory] = useState<OppCategory | "all">("all")
-  const [selectedRegion, setSelectedRegion] = useState("Niterói + São Gonçalo")
+  const [selectedRegion, setSelectedRegion] = useState("Rio de Janeiro (estado)")
   const [freeOnly, setFreeOnly] = useState(false)
   const [search, setSearch] = useState("")
   const [opportunities, setOpportunities] = useState<Opportunity[]>([])
@@ -158,16 +181,22 @@ export default function MapPage() {
   }), [opportunities, activeCategory, freeOnly, search])
 
   const mappable = filtered.filter(opp => getOpportunityCoords(opp))
+  // Sem deslocamentos geográficos artificiais: eles podem levar os pins à água.
+  const markerPositions = useMemo(() => {
+    const positions = new Map<string, [number, number]>()
+    for (const opp of mappable) {
+      const coords = getOpportunityCoords(opp)
+      if (coords) positions.set(opp.id, coords)
+    }
+    return positions
+  }, [mappable])
   const getScore = (opp: Opportunity) => profile ? calculateMatch(profile, opp).score : undefined
   const categories = Object.keys(CATEGORY_CONFIG) as Array<OppCategory | "all">
-  const initialRegion = REGIONS.find(r => r.name === selectedRegion) ?? REGIONS[2]
+  const initialRegion = REGIONS.find(r => r.name === selectedRegion) ?? REGIONS[0]
 
   function selectFromList(opp: Opportunity) {
     setSelectedOpp(opp)
-    const loc = (opp.location ?? "").toLowerCase()
-    if (loc.includes("niter")) setSelectedRegion("Niterói")
-    else if (loc.includes("gonçalo") || loc.includes("goncalo")) setSelectedRegion("São Gonçalo")
-    else if (loc.includes("rio de janeiro")) setSelectedRegion("Rio de Janeiro")
+
   }
 
   return (
@@ -198,15 +227,19 @@ export default function MapPage() {
                 <div className="professional-map-wrap">
                   <MapContainer center={initialRegion.center} zoom={initialRegion.zoom} scrollWheelZoom className="professional-map">
                     <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    <MapFocus opportunity={selectedOpp} region={selectedRegion} />
+                    <MapFocus opportunity={selectedOpp} region={selectedRegion} positions={markerPositions} />
                     {mappable.map(opp => {
-                      const coords = getOpportunityCoords(opp)!
+                      const coords = markerPositions.get(opp.id)!
                       const cfg = CATEGORY_CONFIG[opp.category] ?? CATEGORY_CONFIG.all
-                      const active = selectedOpp?.id === opp.id
-                      return <Marker key={opp.id} position={coords} icon={markerIcon(cfg.color, active)} eventHandlers={{ click: () => setSelectedOpp(opp) }}><Popup><div className="oec-popup"><div className="oec-popup-kicker">{cfg.icon} {cfg.label}</div><strong>{opp.title}</strong><span>{opp.organizations?.name}</span><span className="oec-popup-location"><MapPin size={12} /> {opp.location}</span><button onClick={() => setDetailsOpp(opp)}>Ver oportunidade <ExternalLink size={12} /></button></div></Popup></Marker>
+                      const active = opp.id === selectedOpp?.id
+                      return <Marker key={opp.id} position={coords} icon={markerIcon(cfg.color, active)} eventHandlers={{ click: () => setSelectedOpp(opp) }}>
+                        <Popup><div className="oec-popup"><strong>{opp.title}</strong>
+                          {[opp].map(item => <div key={item.id} className="py-2 border-b border-slate-100"><div className="text-xs font-semibold">{CATEGORY_CONFIG[item.category]?.icon} {item.title}</div><span>{item.organizations?.name} · {item.location}</span><button onClick={() => setDetailsOpp(item)}>Ver detalhes <ExternalLink size={12}/></button></div>)}
+                        </div></Popup>
+                      </Marker>
                     })}
                   </MapContainer>
-                  <div className="map-data-note">Os pins usam o local informado em cada oportunidade. Quando o cadastro informa apenas cidade/UF, o mapa mostra a região aproximada da cidade.</div>
+                  <div className="map-data-note">Os marcadores indicam pontos aproximados dos bairros, não endereços confirmados das empresas. O mapa não desloca automaticamente os pontos. Para precisão, cadastre e valide o endereço de cada oportunidade.</div>
                 </div>
               </div>
             </div>

@@ -1,3 +1,4 @@
+import { parseOpportunityDate } from "@/lib/opportunityDates"
 import { useState, useEffect } from "react"
 import {
   Users, Briefcase, GraduationCap, Building2, TrendingUp, DollarSign,
@@ -6,7 +7,6 @@ import {
   Search, Plus, Filter, ChevronUp, ChevronDown, ArrowUpRight, X, Pencil, Eye,
 } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
-import { CHART_DATA } from "@/data/mockData"
 import { getAdminStats, getAllUsers, getAllOpportunities, getAllApplications, getAllOrganizations } from "@/services/admin"
 import { createOpportunity, updateOpportunity, deleteOpportunity } from "@/services/opportunities"
 import { supabase } from "@/lib/supabase"
@@ -165,15 +165,33 @@ export default function AdminDashboardPage() {
     })
   }, [])
 
+  const monthLabels = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
+  const lastSixMonths = Array.from({ length: 6 }, (_, i) => {
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() - (4 - i), 1)
+    const count = realUsers.filter((u) => {
+      if (!u.created_at) return false
+      const date = new Date(u.created_at)
+      return date >= monthStart && date < monthEnd
+    }).length
+    return { month: `${monthLabels[monthStart.getMonth()]}/${String(monthStart.getFullYear()).slice(-2)}`, value: count }
+  })
+  const categoryColors = ["#6366F1", "#10B981", "#F59E0B", "#F43F5E", "#8B5CF6"]
+  const categoryCounts = Object.entries(realOpps.reduce((acc: Record<string, number>, opp) => {
+    const category = String(opp.category || "Outros")
+    acc[category] = (acc[category] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)).map(([name, value], i) => ({ name, value: Number(value), color: categoryColors[i % categoryColors.length] }))
   const ALL_STATS = [
-    { label: "Usuários cadastrados", value: dataLoading ? "…" : stats.users.toLocaleString("pt-BR"), icon: <Users size={18} />, color: "#6366F1", trend: "18%" },
-    { label: "Inscrições totais", value: dataLoading ? "…" : stats.applications.toLocaleString("pt-BR"), icon: <Target size={18} />, color: "#10B981", trend: "24%" },
-    { label: "Oportunidades", value: dataLoading ? "…" : stats.opportunities.toString(), icon: <Briefcase size={18} />, color: "#F59E0B", trend: "7%" },
-    { label: "Receita mensal", value: "R$ 47.2k", icon: <DollarSign size={18} />, color: "#8B5CF6", trend: "14%" },
-    { label: "Organizações", value: dataLoading ? "…" : stats.organizations.toString(), icon: <Building2 size={18} />, color: "#F43F5E", trend: "3%" },
-    { label: "Empresas", value: dataLoading ? "…" : realOrgs.filter((o: any) => o.type === "empresa").length.toString(), icon: <Building2 size={18} />, color: "#06B6D4", trend: "5%" },
-    { label: "Instituições", value: dataLoading ? "…" : realOrgs.filter((o: any) => o.type === "instituicao").length.toString(), icon: <GraduationCap size={18} />, color: "#D97706", trend: "31%" },
-    { label: "Conversão", value: stats.users > 0 ? `${Math.round((stats.applications / stats.users) * 100)}%` : "—", icon: <TrendingUp size={18} />, color: "#059669", trend: "2.1%" },
+    { label: "Usuários cadastrados", value: dataLoading ? "…" : stats.users.toLocaleString("pt-BR"), icon: <Users size={18} />, color: "#6366F1",  },
+    { label: "Inscrições totais", value: dataLoading ? "…" : stats.applications.toLocaleString("pt-BR"), icon: <Target size={18} />, color: "#10B981",  },
+    { label: "Oportunidades", value: dataLoading ? "…" : stats.opportunities.toString(), icon: <Briefcase size={18} />, color: "#F59E0B",  },
+    { label: "Receita mensal", value: "Não disponível", icon: <DollarSign size={18} />, color: "#8B5CF6",  },
+    { label: "Organizações", value: dataLoading ? "…" : stats.organizations.toString(), icon: <Building2 size={18} />, color: "#F43F5E",  },
+    { label: "Empresas", value: dataLoading ? "…" : realOrgs.filter((o: any) => o.type === "empresa").length.toString(), icon: <Building2 size={18} />, color: "#06B6D4",  },
+    { label: "Instituições", value: dataLoading ? "…" : realOrgs.filter((o: any) => o.type === "instituicao").length.toString(), icon: <GraduationCap size={18} />, color: "#D97706",  },
+    { label: "Conversão", value: stats.users > 0 ? `${Math.round((stats.applications / stats.users) * 100)}%` : "—", icon: <TrendingUp size={18} />, color: "#059669",  },
   ]
 
   const openCreateOpp = () => {
@@ -256,7 +274,7 @@ export default function AdminDashboardPage() {
     setApplicantsLoading(false)
   }
 
-  const filteredUsers = (realUsers.length > 0 ? realUsers : MOCK_USERS).filter((u: any) =>
+  const filteredUsers = realUsers.filter((u: any) =>
     !userSearch || (u.name ?? u.email ?? "").toLowerCase().includes(userSearch.toLowerCase()) || (u.email ?? "").toLowerCase().includes(userSearch.toLowerCase())
   )
 
@@ -303,7 +321,7 @@ export default function AdminDashboardPage() {
             <div className="w-6 h-6 rounded-full bg-brand-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">A</div>
             <div className="min-w-0">
               <div className="text-white text-xs font-medium truncate">Administrador</div>
-              <div className="text-slate-500 text-[10px] truncate">admin@ondeeucomeco.com</div>
+              <div className="text-slate-500 text-[10px] truncate">iasmim17santoss@gmail.com</div>
             </div>
           </div>
           <button
@@ -354,10 +372,10 @@ export default function AdminDashboardPage() {
                       <h3 className="font-semibold text-slate-900">Crescimento de usuários</h3>
                       <div className="text-slate-400 text-xs">Últimos 6 meses</div>
                     </div>
-                    <span className="text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-1 rounded-full">+202%</span>
+                    
                   </div>
                   <ResponsiveContainer width="100%" height={200}>
-                    <AreaChart data={CHART_DATA.users}>
+                    <AreaChart data={lastSixMonths}>
                       <defs>
                         <linearGradient id="uGrad" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#6366F1" stopOpacity={0.25} />
@@ -378,22 +396,22 @@ export default function AdminDashboardPage() {
                   <div className="text-slate-400 text-xs mb-4">Distribuição de oportunidades</div>
                   <ResponsiveContainer width="100%" height={130}>
                     <PieChart>
-                      <Pie data={CHART_DATA.categories} dataKey="value" cx="50%" cy="50%" innerRadius={35} outerRadius={58} paddingAngle={3}>
-                        {CHART_DATA.categories.map((entry) => (
+                      <Pie data={categoryCounts} dataKey="value" cx="50%" cy="50%" innerRadius={35} outerRadius={58} paddingAngle={3}>
+                        {categoryCounts.map((entry) => (
                           <Cell key={entry.name} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(v) => `${v}%`} />
+                      <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="space-y-1.5 mt-1">
-                    {CHART_DATA.categories.map((c) => (
+                    {categoryCounts.map((c) => (
                       <div key={c.name} className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-1.5">
                           <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.color }} />
                           <span className="text-slate-600">{c.name}</span>
                         </div>
-                        <span className="font-semibold text-slate-700">{c.value}%</span>
+                        <span className="font-semibold text-slate-700">{c.value}</span>
                       </div>
                     ))}
                   </div>
@@ -403,9 +421,9 @@ export default function AdminDashboardPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
                   <h3 className="font-semibold text-slate-900 mb-1">Receita mensal (R$)</h3>
-                  <div className="text-slate-400 text-xs mb-5">Últimos 6 meses</div>
+                  <div className="text-slate-400 text-xs mb-5">Sem integração financeira — não há dados reais para exibir</div>
                   <ResponsiveContainer width="100%" height={155}>
-                    <BarChart data={CHART_DATA.revenue} barSize={28}>
+                    <BarChart data={[]} barSize={28}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
                       <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} width={50} tickFormatter={(v) => `${v / 1000}k`} />
@@ -417,9 +435,9 @@ export default function AdminDashboardPage() {
 
                 <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
                   <h3 className="font-semibold text-slate-900 mb-1">Matches realizados</h3>
-                  <div className="text-slate-400 text-xs mb-5">Acumulado nos últimos 6 meses</div>
+                  <div className="text-slate-400 text-xs mb-5">Sem histórico de matches integrado</div>
                   <ResponsiveContainer width="100%" height={155}>
-                    <LineChart data={CHART_DATA.matches}>
+                    <LineChart data={[]}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
                       <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} width={50} tickFormatter={(v) => `${v / 1000}k`} />
@@ -629,7 +647,7 @@ export default function AdminDashboardPage() {
                             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 capitalize">{opp.category}</span>
                           </td>
                           <td className="px-5 py-3.5 text-slate-500 text-sm">{opp.location ?? "—"}</td>
-                          <td className="px-5 py-3.5 text-slate-500 text-sm">{opp.deadline ? new Date(opp.deadline).toLocaleDateString("pt-BR") : "—"}</td>
+                          <td className="px-5 py-3.5 text-slate-500 text-sm">{opp.deadline ? parseOpportunityDate(opp.deadline)?.toLocaleDateString("pt-BR") : "—"}</td>
                           <td className="px-5 py-3.5">
                             <span className={`text-xs px-2 py-1 rounded-full font-medium ${opp.status === "ativo" ? "text-emerald-700 bg-emerald-50" : opp.status === "pausado" ? "text-amber-700 bg-amber-50" : "text-red-600 bg-red-50"}`}>
                               {opp.status}
@@ -802,139 +820,41 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
-          {/* ── PAYMENTS ── */}
-          {activeSection === "payments" && (
-            <div className="space-y-5">
+          {/* ── FINANCEIRO: dados de organizações, sem inventar pagamentos ── */}
+          {(activeSection === "payments" || activeSection === "plans") && (() => {
+            const rows = realOrgs.map((org: any) => {
+              const count = realOpps.filter((opp: any) => opp.org_id === org.id).length
+              const company = org.type === "empresa"
+              const plan = org.plan ?? "gratuito"
+              // O campo organizations.plan usa nomenclatura diferente da vitrine pública.
+              // Valores pagos só devem vir de uma tabela de transações confirmadas.
+              const estimate = plan === "profissional" ? (company ? 499 : 349) : null
+              return { ...org, count, plan, estimate }
+            })
+            const paidPlans = rows.filter((r: any) => r.plan !== "gratuito")
+            const estimated = paidPlans.reduce((sum: number, r: any) => sum + (r.estimate ?? 0), 0)
+            return <div className="space-y-5">
+              <div className="rounded-2xl bg-blue-50 border border-blue-100 p-4 text-sm text-blue-900">
+                <strong>Apresentação / estimativa:</strong> organizações e vagas vêm do Supabase. O valor é uma projeção dos planos identificáveis, não um comprovante de pagamento. Planos empresariais personalizados não entram na soma. Nenhuma cobrança é realizada aqui.
+              </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: "Receita mensal", value: "R$ 47.2k", color: "#10B981", icon: <DollarSign size={18} /> },
-                  { label: "Assinaturas ativas", value: "84", color: "#6366F1", icon: <CheckCircle2 size={18} /> },
-                  { label: "Pagamentos pendentes", value: "3", color: "#F59E0B", icon: <Clock size={18} /> },
-                  { label: "Cancelamentos mês", value: "2", color: "#F43F5E", icon: <AlertCircle size={18} /> },
-                ].map((s) => (
-                  <div key={s.label} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-                    <div className="w-9 h-9 rounded-xl mb-3 flex items-center justify-center" style={{ backgroundColor: s.color + "15", color: s.color }}>
-                      {s.icon}
-                    </div>
-                    <div className="text-2xl font-bold text-slate-900">{s.value}</div>
-                    <div className="text-slate-500 text-xs mt-0.5">{s.label}</div>
-                  </div>
-                ))}
+                  {label:"Organizações cadastradas",value:String(rows.length)},
+                  {label:"Planos não gratuitos",value:String(paidPlans.length)},
+                  {label:"Projeção mensal parcial",value:estimated.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})},
+                  {label:"Recebimentos confirmados",value:"Não integrado"},
+                ].map(item => <div key={item.label} className="bg-white rounded-2xl border border-slate-100 p-5"><div className="text-xl font-bold text-slate-900">{item.value}</div><div className="text-slate-500 text-xs mt-2">{item.label}</div></div>)}
               </div>
-
               <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="px-6 py-5 border-b border-slate-100">
-                  <h2 className="font-display font-semibold text-slate-900">Histórico de pagamentos</h2>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-slate-50">
-                        {["Empresa / Instituição", "Tipo", "Plano", "Valor", "Status", "Data"].map((h) => (
-                          <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wide">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {MOCK_PAYMENTS.map((p, i) => (
-                        <tr key={i} className="border-t border-slate-50 hover:bg-slate-50/50 transition-colors">
-                          <td className="px-5 py-3.5 font-medium text-slate-800 text-sm">{p.company}</td>
-                          <td className="px-5 py-3.5">
-                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.type === "Empresa" ? "bg-brand-50 text-brand-700" : "bg-emerald-50 text-emerald-700"}`}>
-                              {p.type}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3.5 text-slate-500 text-sm">{p.plan}</td>
-                          <td className="px-5 py-3.5 font-semibold text-slate-700 text-sm">{p.value}</td>
-                          <td className="px-5 py-3.5">
-                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[p.status]}`}>{p.status}</span>
-                          </td>
-                          <td className="px-5 py-3.5 text-slate-400 text-sm">{p.date}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <div className="px-6 py-5 border-b"><h2 className="font-semibold text-slate-900">Empresas, instituições e planos cadastrados</h2><p className="text-xs text-slate-500 mt-1">As oportunidades fictícias pertencem à organização de demonstração até serem redistribuídas no banco.</p></div>
+                <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-slate-50"><tr>{["Organização","Tipo","Plano no banco","Vagas","Estimativa / mês","Pagamento"].map(h => <th key={h} className="text-left px-4 py-3 text-xs text-slate-500">{h}</th>)}</tr></thead><tbody>
+                  {rows.map((r: any) => <tr key={r.id} className="border-t border-slate-100"><td className="px-4 py-3 font-medium text-slate-800">{r.name}</td><td className="px-4 py-3 capitalize">{r.type}</td><td className="px-4 py-3 capitalize">{r.plan}</td><td className="px-4 py-3">{r.count}</td><td className="px-4 py-3">{r.estimate == null ? "A confirmar" : r.estimate.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}</td><td className="px-4 py-3 text-amber-700">Não verificado</td></tr>)}
+                  {!rows.length && <tr><td colSpan={6} className="p-6 text-slate-500">Nenhuma organização acessível. Verifique os dados e as permissões do Supabase.</td></tr>}
+                </tbody></table></div>
               </div>
+              <div className="bg-white rounded-2xl p-5 border border-slate-100 text-sm text-slate-600">Preços públicos existentes: Starter R$ 199/mês, Professional R$ 499/mês, Business sob consulta; instituições Essencial R$ 149/mês e Avançado R$ 349/mês. O cadastro interno ainda usa gratuito/profissional/empresarial: é necessário vincular o plano exato antes de contabilizar receita real.</div>
             </div>
-          )}
-
-          {/* ── PLANS ── */}
-          {activeSection === "plans" && (
-            <div className="space-y-5">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                {/* Company plans */}
-                <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
-                  <h3 className="font-semibold text-slate-900 mb-4">Planos Empresariais</h3>
-                  <div className="space-y-3">
-                    {[
-                      { name: "Starter", price: "R$ 199/mês", clients: 18, color: "#CBD5E1" },
-                      { name: "Professional", price: "R$ 499/mês", clients: 32, color: "#6366F1" },
-                      { name: "Business", price: "Personalizado", clients: 12, color: "#312E81" },
-                    ].map((plan) => (
-                      <div key={plan.name} className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: plan.color }} />
-                        <div className="flex-1">
-                          <div className="font-semibold text-slate-800">{plan.name}</div>
-                          <div className="text-slate-500 text-xs">{plan.price}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-slate-800">{plan.clients}</div>
-                          <div className="text-slate-400 text-xs">clientes</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Institution plans */}
-                <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
-                  <h3 className="font-semibold text-slate-900 mb-4">Planos Institucionais</h3>
-                  <div className="space-y-3">
-                    {[
-                      { name: "Essencial", price: "R$ 149/mês", clients: 15, color: "#A5B4FC" },
-                      { name: "Avançado", price: "R$ 349/mês", clients: 9, color: "#8B5CF6" },
-                    ].map((plan) => (
-                      <div key={plan.name} className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: plan.color }} />
-                        <div className="flex-1">
-                          <div className="font-semibold text-slate-800">{plan.name}</div>
-                          <div className="text-slate-500 text-xs">{plan.price}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-slate-800">{plan.clients}</div>
-                          <div className="text-slate-400 text-xs">clientes</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-6 p-4 rounded-2xl bg-brand-50 border border-brand-100">
-                    <div className="text-brand-700 text-xs font-semibold mb-1">Plano gratuito para usuários</div>
-                    <div className="text-brand-600 text-sm">2.480 usuários ativos · R$ 0</div>
-                    <div className="text-brand-500 text-xs mt-0.5">Matching, recomendações e caminho personalizado</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Revenue breakdown */}
-              <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
-                <h3 className="font-semibold text-slate-900 mb-4">Receita por plano</h3>
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={MOCK_PLANS_USAGE} layout="vertical" margin={{ left: 120 }}>
-                    <XAxis type="number" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} tickFormatter={(v) => `R$ ${(v / 1000).toFixed(1)}k`} />
-                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#475569" }} axisLine={false} tickLine={false} width={120} />
-                    <Tooltip formatter={(v) => [`R$ ${(v as number).toLocaleString("pt-BR")}`, "Receita"]} />
-                    <Bar dataKey="revenue" radius={[0, 6, 6, 0]}>
-                      {MOCK_PLANS_USAGE.map((entry, index) => (
-                        <Cell key={index} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
+          })()}
 
           {/* ── SETTINGS ── */}
           {activeSection === "settings" && (

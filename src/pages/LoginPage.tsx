@@ -24,7 +24,7 @@ export default function LoginPage() {
       navigate(dashboardPath(profile?.role))
     }
     setLoading(false)
-    if (!res.success) {
+       if (!res.success) {
       setError(res.error || "Erro ao entrar.")
     }
   }

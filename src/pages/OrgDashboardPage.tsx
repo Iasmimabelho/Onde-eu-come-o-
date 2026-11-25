@@ -1,3 +1,4 @@
+import { parseOpportunityDate } from "@/lib/opportunityDates"
 import { useState, useEffect } from "react"
 import {
   Briefcase, Users, Plus, Pencil, Eye, LogOut, Settings,
@@ -91,6 +92,9 @@ export default function OrgDashboardPage() {
   const [formError, setFormError] = useState("")
   const [applicants, setApplicants] = useState<{ opp: Opportunity; list: any[] } | null>(null)
   const [applicantsLoading, setApplicantsLoading] = useState(false)
+  const [applicantError, setApplicantError] = useState("")
+  const [updatingApplicantId, setUpdatingApplicantId] = useState<string | null>(null)
+  const [applicantMessage, setApplicantMessage] = useState("")
   const [profileForm, setProfileForm] = useState({ name: "", description: "", website: "", location: "", category: "" })
   const [profileSaving, setProfileSaving] = useState(false)
   const [profileMsg, setProfileMsg] = useState("")
@@ -196,16 +200,24 @@ export default function OrgDashboardPage() {
   const loadApplicants = async (opp: Opportunity) => {
     setApplicants({ opp, list: [] })
     setApplicantsLoading(true)
+    setApplicantError("")
+    setApplicantMessage("")
     setSection("applicants")
 
-    const { data: apps } = await supabase
+    const { data: apps, error: appsError } = await supabase
       .from("applications")
       .select("id, user_id, opportunity_id, status, created_at, notes")
       .eq("opportunity_id", opp.id)
       .order("created_at", { ascending: false })
 
+    if (appsError) {
+      setApplicantError(`Não foi possível carregar candidatos: ${appsError.message}`)
+      setApplicantsLoading(false)
+      return
+    }
     if (!apps || apps.length === 0) {
       setApplicants({ opp, list: [] })
+      setApplicantsLoading(false)
       return
     }
 
@@ -224,11 +236,33 @@ export default function OrgDashboardPage() {
   }
 
   const updateAppStatus = async (appId: string, newStatus: string) => {
-    await supabase.from("applications").update({ status: newStatus }).eq("id", appId)
+    if (!org || !applicants || updatingApplicantId) return
+    const previous = applicants.list.find((a) => a.id === appId)
+    if (!previous || previous.status === newStatus) return
+    setUpdatingApplicantId(appId)
+    setApplicantError("")
+    setApplicantMessage("")
+
+    // Confere se o banco realmente alterou o registro, sem fingir sucesso na interface.
+    const { data, error } = await supabase
+      .from("applications")
+      .update({ status: newStatus })
+      .eq("id", appId)
+      .eq("opportunity_id", applicants.opp.id)
+      .select("id, status")
+      .single()
+
+    if (error || !data || data.status !== newStatus) {
+      setApplicantError(error?.message ?? "O banco não confirmou a alteração. Confira as permissões da empresa no Supabase.")
+      setUpdatingApplicantId(null)
+      return
+    }
     setApplicants((prev) => prev ? {
       ...prev,
-      list: prev.list.map((a) => a.id === appId ? { ...a, status: newStatus } : a),
+      list: prev.list.map((a) => a.id === appId ? { ...a, status: data.status } : a),
     } : prev)
+    setApplicantMessage(`Status salvo: ${appStatusLabel[newStatus] ?? newStatus}. A notificação interna será criada pelo banco quando o SQL de configuração estiver instalado.`)
+    setUpdatingApplicantId(null)
   }
 
   const saveProfile = async () => {
@@ -343,7 +377,7 @@ export default function OrgDashboardPage() {
                         </td>
                         <td className="px-5 py-3.5 text-slate-500 text-sm capitalize">{opp.modality}</td>
                         <td className="px-5 py-3.5 text-slate-500 text-sm">
-                          {opp.deadline ? new Date(opp.deadline).toLocaleDateString("pt-BR") : "—"}
+                          {opp.deadline ? parseOpportunityDate(opp.deadline)?.toLocaleDateString("pt-BR") : "—"}
                         </td>
                         <td className="px-5 py-3.5">
                           <div className="relative group inline-block">
@@ -392,6 +426,8 @@ export default function OrgDashboardPage() {
               {!applicants && <p className="text-slate-400 text-sm mt-0.5">Selecione uma oportunidade para ver os candidatos.</p>}
             </div>
 
+            {applicantError && <p role="alert" className="mb-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{applicantError}</p>}
+            {applicantMessage && <p role="status" className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{applicantMessage}</p>}
             {!applicants ? (
               <div className="bg-white rounded-3xl border border-slate-100 p-10 text-center">
                 <div className="text-4xl mb-3">👥</div>
@@ -439,6 +475,8 @@ export default function OrgDashboardPage() {
                         <td className="px-5 py-3.5">
                           <select
                             value={a.status}
+                            disabled={updatingApplicantId !== null}
+                            aria-label={`Alterar status de ${a.profiles?.name ?? "candidato"}`}
                             onChange={(e) => updateAppStatus(a.id, e.target.value)}
                             className="text-xs px-2 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-brand-400"
                           >
